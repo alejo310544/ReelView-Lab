@@ -1,0 +1,51 @@
+
+name: Build ReelView Lab APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Extraer codigo fuente
+        run: |
+          unzip -o ReelView-Lab-source.zip -d .
+          test -f app/src/main/AndroidManifest.xml
+          test -f app/src/main/java/com/reelview/lab/MainActivity.kt
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar SDK 35
+        run: |
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
+
+      - name: Preparar Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: '8.9'
+
+      - name: Compilar aplicacion
+        run: gradle :app:assembleDebug
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReelView-Lab-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
